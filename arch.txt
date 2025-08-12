@@ -1,0 +1,47 @@
+src/
+├── cluster.js                 # Main cluster manager
+├── app.js                     # Express app setup
+├── server.js                  # Individual server instance
+├── config/
+│   ├── database.js           # Database configuration & pools
+│   ├── redis.js              # Redis configuration
+│   ├── casbin.js             # Casbin RBAC/ABAC setup
+│   ├── queue.js              # Bull queue configuration
+│   └── environment.js        # Environment variables
+├── middleware/
+│   ├── auth.js               # JWT authentication
+│   ├── rateLimit.js          # Rate limiting
+│   ├── throttle.js           # Request throttling
+│   ├── debounce.js           # Request debouncing
+│   ├── rbac.js               # Role-based access control
+│   ├── abac.js               # Attribute-based access control
+│   ├── cache.js              # Redis caching middleware
+│   └── validation.js         # Request validation
+├── services/
+│   ├── user/                 # User service
+│   ├── auth/                 # Authentication service
+│   ├── product/              # Product service
+│   ├── order/                # Order service
+│   └── notification/         # Notification service
+├── database/
+│   ├── migrations/           # Database migrations
+│   ├── schemas/              # SQL schema files
+│   │   ├── user_service.sql
+│   │   ├── product_service.sql
+│   │   └── order_service.sql
+│   └── connection.js         # Database connection pools
+├── queues/
+│   ├── emailQueue.js         # Email processing queue
+│   ├── notificationQueue.js  # Notification queue
+│   └── dataProcessingQueue.js # Data processing queue
+├── utils/
+│   ├── logger.js             # Winston logger
+│   ├── errors.js             # Custom error classes
+│   ├── response.js           # Standardized responses
+│   └── helpers.js            # Utility functions
+└── routes/
+    ├── index.js              # Main router
+    ├── auth.js               # Auth routes
+    ├── users.js              # User routes
+    ├── products.js           # Product routes
+    └── orders.js             # Order routes
