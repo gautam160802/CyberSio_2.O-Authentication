@@ -5,6 +5,9 @@ require('dotenv').config();
 
 app.use(express.json());
 
+const licenseRoutes = require('./src/routes/licenseRoutes');
+app.use('/api/licenses', licenseRoutes);
+
 // Use auth routes under /api
 app.use('/api', authRoutes);
 

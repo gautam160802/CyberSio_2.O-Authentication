@@ -13,7 +13,7 @@ CREATE TABLE licenses (
     expires_at TIMESTAMP NULL,
     revoked_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE INDEX IF NOT EXISTS idx_licenses_license_key ON licenses(license_key);
 
@@ -24,4 +24,4 @@ CREATE TABLE IF NOT EXISTS license_audit (
     action_id INTEGER NULL,
     details JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
