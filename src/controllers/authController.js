@@ -1,64 +1,70 @@
-// const AuthService = require('../services/authService');
+const pool = require('../database/db');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-// exports.register = async (req, res) => {
-//   try {
-//     const { name, email, password, role } = req.body; // role optional, default user
-//     const data = await AuthService.register({ name, email, password, role });
-//     res.status(201).json(data);
-//   } catch (err) {
-//     res.status(400).json({ error: err.message });
-//   }
-// };
+const generateToken = (user) => {
+  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
 
-// exports.login = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const data = await AuthService.login({ email, password });
-//     res.status(200).json(data);
-//   } catch (err) {
-//     res.status(400).json({ error: err.message });
-//   }
-// };
+const generateRefreshToken = (user) => {
+  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+  });
+};
 
-
-const AuthService = require('../services/authService');
-
-exports.register = async (req, res) => {
+const register = async (req, res) => {
+  console.log("req.body", req.body);
+  const { username, email, password, role } = req.body;
   try {
-    const { username, email, password, role } = req.body;
-    const result = await AuthService.register({ username, email, password, role });
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
+      [username, email, hashedPassword, role || 'user']
+    );
+    res.status(201).json({ message: 'User registered', user: result.rows[0] });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-exports.login = async (req, res) => {
+const login = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body;
-    const result = await AuthService.login({ email, password });
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (!user.rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
+
+    const token = generateToken(user.rows[0]);
+    const refreshToken = generateRefreshToken(user.rows[0]);
+
+    res.json({ message: 'Login successful', token, refreshToken });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-exports.refresh = async (req, res) => {
+// Refresh token route
+const refreshToken = (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(401).json({ error: 'Refresh token required' });
+
   try {
-    const { refreshToken } = req.body;
-    const result = await AuthService.refresh(refreshToken);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    const user = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    const newToken = generateToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+    res.json({ token: newToken, refreshToken: newRefreshToken });
+  } catch (err) {
+    res.status(403).json({ error: 'Invalid refresh token' });
   }
 };
 
-exports.logout = async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    await AuthService.logout(refreshToken);
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+const logout = async (req, res) => {
+  // For stateless JWT, just delete token on client-side
+  res.json({ message: 'Logout successful' });
 };
+
+module.exports = { register, login, logout, refreshToken };

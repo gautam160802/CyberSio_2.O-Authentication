@@ -1,17 +1,21 @@
 const express = require('express');
-const app = express();
-const authRoutes = require('./src/routes/auth');
-require('dotenv').config();
+const dotenv = require('dotenv');
+const cors = require('cors');
 
-app.use(express.json());
+dotenv.config();
 
+const authRoutes = require('./src/routes/authRoutes');
 const licenseRoutes = require('./src/routes/licenseRoutes');
-app.use('/api/licenses', licenseRoutes);
 
-// Use auth routes under /api
-app.use('/api', authRoutes);
+const app = express();
+
+// ✅ Make sure this is present BEFORE your routes
+app.use(cors());
+app.use(express.json()); // <- Important: parses JSON body
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/license', licenseRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
