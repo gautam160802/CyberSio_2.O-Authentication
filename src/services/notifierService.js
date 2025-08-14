@@ -1,37 +1,22 @@
-const nodemailer = require('nodemailer');
-const axios = require('axios');
+// src/services/notifierService.js
+const emailNotifier = require('../notifiers/emailNotifier');
+const smsNotifier = require('../notifiers/smsNotifier');
+const whatsappNotifier = require('../notifiers/whatsappNotifier');
+const webhookNotifier = require('../notifiers/webhookNotifier');
 
-// Email setup (SMTP)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false, // true if 465
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD
-  }
-});
+async function sendNotification({ type, to, subject, message, webhookUrl }) {
+    switch (type) {
+        case 'email':
+            return await emailNotifier.sendEmail(to, subject, message);
+        case 'sms':
+            return await smsNotifier.sendSMS(to, message);
+        case 'whatsapp':
+            return await whatsappNotifier.sendWhatsApp(to, message);
+        case 'webhook':
+            return await webhookNotifier.sendWebhook(webhookUrl, message);
+        default:
+            throw new Error(`Unsupported notification type: ${type}`);
+    }
+}
 
-const sendEmail = async (to, subject, text) => {
-  const mailOptions = { from: process.env.SMTP_USER, to, subject, text };
-  return transporter.sendMail(mailOptions);
-};
-
-// SMS (example using hypothetical SMS API)
-const sendSMS = async (phone, message) => {
-  // Replace with real SMS API
-  console.log(`Sending SMS to ${phone}: ${message}`);
-  return { status: 'success', phone, message };
-};
-
-// Webhook
-const sendWebhook = async (url, payload) => {
-  try {
-    const res = await axios.post(url, payload);
-    return res.data;
-  } catch (err) {
-    throw err;
-  }
-};
-
-module.exports = { sendEmail, sendSMS, sendWebhook };
+module.exports = { sendNotification };

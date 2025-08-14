@@ -1,9 +1,8 @@
+// src/routes/notifierRoutes.js
 const express = require('express');
-const { notify } = require('../controllers/notifierController');
-const { authenticate, authorize } = require('../middleware/authMiddleware');
+const { sendNotification } = require('../controllers/notifierController');
 const router = express.Router();
 
-// Only admin can send notifications via API
-router.post('/', authenticate, authorize(['admin']), notify);
+router.post('/', sendNotification);
 
 module.exports = router;

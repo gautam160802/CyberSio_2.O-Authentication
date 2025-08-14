@@ -1,29 +1,14 @@
-const { sendEmail, sendSMS, sendWebhook } = require('../services/notifierService');
+// src/controllers/notifierController.js
+const notifierService = require('../services/notifierService');
 
-const notify = async (req, res) => {
-  const { type, to, subject, message, url, payload } = req.body;
-
-  try {
-    let result;
-
-    switch(type) {
-      case 'email':
-        result = await sendEmail(to, subject, message);
-        break;
-      case 'sms':
-        result = await sendSMS(to, message);
-        break;
-      case 'webhook':
-        result = await sendWebhook(url, payload);
-        break;
-      default:
-        return res.status(400).json({ error: 'Invalid notification type' });
+async function sendNotification(req, res) {
+    try {
+        const { type, to, subject, message, webhookUrl } = req.body;
+        const result = await notifierService.sendNotification({ type, to, subject, message, webhookUrl });
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
+}
 
-    res.json({ message: 'Notification sent', result });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-module.exports = { notify };
+module.exports = { sendNotification };
